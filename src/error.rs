@@ -1,19 +1,26 @@
+use std::env::VarError;
 use std::fmt::{Debug, Display, Formatter};
+
+#[derive(Copy, Clone, Debug)]
+pub enum ErrorKind {
+    Udix, VarError
+}
 
 #[derive(Clone)]
 pub struct Error {
+    kind: ErrorKind,
     message: String,
     source: Option<Box<Error>>,
 }
 
 impl Error {
-    pub fn new(message: String, source: Option<Box<Error>>) -> Error {
-        Error { message, source }
+    pub fn new(kind: ErrorKind, message: String, source: Option<Box<Error>>) -> Error {
+        Error { kind, message, source }
     }
     pub fn report(&self) -> String {
         match &self.source {
-            None => { self.message.clone() }
-            Some(source) => { format!("{}: {}", self.message, source) }
+            None => { format!("{} ({})", self.message, self.kind) }
+            Some(source) => { format!("{} ({}): {}", self.message, self.kind, source) }
         }
     }
 }
@@ -26,9 +33,26 @@ impl From<&str> for Error {
 
 impl From<String> for Error {
     fn from(message: String) -> Self {
+        let kind = ErrorKind::Udix;
         let source: Option<Box<Error>> = None;
-        Error::new(message, source)
+        Error::new(kind, message, source)
     }
+}
+
+impl From<VarError> for Error {
+    fn from(var_error: VarError) -> Self {
+        from_error(ErrorKind::VarError, &var_error)
+    }
+}
+
+fn from_error(kind: ErrorKind, error: &dyn std::error::Error) -> Error {
+    let message = error.to_string();
+    let source: Option<Box<Error>> = None;
+    Error::new(kind, message, source)
+}
+
+impl Display for ErrorKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result { write!(f, "{:?}", self) }
 }
 
 impl Debug for Error {
