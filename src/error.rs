@@ -1,10 +1,9 @@
 use std::env::VarError;
 use std::fmt::{Debug, Display, Formatter};
+use std::str::Utf8Error;
 
 #[derive(Copy, Clone, Debug)]
-pub enum ErrorKind {
-    Udix, VarError, IO, TOML
-}
+pub enum ErrorKind { Udix, VarError, Io, Toml, Utf8 }
 
 #[derive(Clone)]
 pub struct Error {
@@ -47,13 +46,19 @@ impl From<VarError> for Error {
 
 impl From<std::io::Error> for Error {
     fn from(io_error: std::io::Error) -> Self {
-        from_error(ErrorKind::IO, &io_error)
+        from_error(ErrorKind::Io, &io_error)
     }
 }
 
 impl From<toml::de::Error> for Error {
     fn from(toml_error: toml::de::Error) -> Self {
-        from_error(ErrorKind::TOML, &toml_error)
+        from_error(ErrorKind::Toml, &toml_error)
+    }
+}
+
+impl From<Utf8Error> for Error {
+    fn from(utf8_error: Utf8Error) -> Self {
+        from_error(ErrorKind::Utf8, &utf8_error)
     }
 }
 

@@ -5,12 +5,13 @@ pub mod error;
 pub mod selection;
 mod env;
 mod conf;
+mod vcfs;
 
 pub fn run(selection: Selection) -> Result<(), Error>{
   match selection {
     Selection::ListVcfs => {
       let conf = conf::read_conf()?;
-      println!("VCF files are here: {}", conf.data.vcfs_dir);
+      vcfs::list_vcfs(conf)?;
       Ok(())
     }
   }
