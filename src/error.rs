@@ -3,7 +3,7 @@ use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Copy, Clone, Debug)]
 pub enum ErrorKind {
-    Udix, VarError
+    Udix, VarError, IO, TOML
 }
 
 #[derive(Clone)]
@@ -42,6 +42,18 @@ impl From<String> for Error {
 impl From<VarError> for Error {
     fn from(var_error: VarError) -> Self {
         from_error(ErrorKind::VarError, &var_error)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(io_error: std::io::Error) -> Self {
+        from_error(ErrorKind::IO, &io_error)
+    }
+}
+
+impl From<toml::de::Error> for Error {
+    fn from(toml_error: toml::de::Error) -> Self {
+        from_error(ErrorKind::TOML, &toml_error)
     }
 }
 

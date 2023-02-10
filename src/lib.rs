@@ -9,8 +9,8 @@ mod conf;
 pub fn run(selection: Selection) -> Result<(), Error>{
   match selection {
     Selection::ListVcfs => {
-      let home = env::get_home()?;
-      println!("Hello, world! Welcome at home: {}", home);
+      let conf = conf::read_conf()?;
+      println!("VCF files are here: {}", conf.data.vcfs_dir);
       Ok(())
     }
   }
