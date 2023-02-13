@@ -1,9 +1,11 @@
 use std::env::VarError;
 use std::fmt::{Debug, Display, Formatter};
+use std::num::ParseIntError;
 use std::str::Utf8Error;
+use std::string::FromUtf8Error;
 
 #[derive(Copy, Clone, Debug)]
-pub enum ErrorKind { Udix, VarError, Io, Toml, Utf8 }
+pub enum ErrorKind { Udix, VarError, Io, Toml, Utf8, ParseInt }
 
 #[derive(Clone)]
 pub struct Error {
@@ -59,6 +61,18 @@ impl From<toml::de::Error> for Error {
 impl From<Utf8Error> for Error {
     fn from(utf8_error: Utf8Error) -> Self {
         from_error(ErrorKind::Utf8, &utf8_error)
+    }
+}
+
+impl From<FromUtf8Error> for Error {
+    fn from(utf8_error: FromUtf8Error) -> Self {
+        from_error(ErrorKind::Utf8, &utf8_error)
+    }
+}
+
+impl From<ParseIntError> for Error {
+    fn from(parse_int_error: ParseIntError) -> Self {
+        from_error(ErrorKind::ParseInt, &parse_int_error)
     }
 }
 

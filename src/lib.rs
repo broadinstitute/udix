@@ -6,6 +6,7 @@ pub mod selection;
 mod env;
 mod conf;
 mod vcfs;
+mod dx;
 
 pub fn run(selection: Selection) -> Result<(), Error>{
   match selection {
