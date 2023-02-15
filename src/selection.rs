@@ -1,4 +1,4 @@
 pub enum Selection {
-    ListVcfs
+    ListVcfs, SurveyVcfs
 }
 
