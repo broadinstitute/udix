@@ -5,12 +5,18 @@ use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub(crate) struct Conf {
-    pub(crate) data: DataConf
+    pub(crate) data: DataConf,
+    pub(crate) workspace: WorkspaceConf
 }
 
 #[derive(Deserialize)]
 pub(crate) struct DataConf {
     pub(crate) vcfs_dir: String
+}
+
+#[derive(Deserialize)]
+pub(crate) struct WorkspaceConf {
+    pub(crate) work_dir: String
 }
 
 pub(crate) fn read_conf() -> Result<Conf, Error> {

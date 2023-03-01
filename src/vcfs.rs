@@ -35,7 +35,7 @@ impl Chromosome {
 #[derive(Ord, PartialOrd, Eq, PartialEq)]
 struct VcfFileKey {
     chromosome: Chromosome,
-    block: usize,
+    i_file: usize,
 }
 
 struct VcfFile {
@@ -43,21 +43,21 @@ struct VcfFile {
     name: String,
 }
 
-struct VcfFileGroup {
-    i_group: usize,
+struct VcfFileBlock {
+    i_block: usize,
     files: Vec<VcfFile>
 }
 
 struct VcfFilesOfChr {
     chromosome: Chromosome,
-    groups: Vec<VcfFileGroup>
+    blocks: Vec<VcfFileBlock>
 }
 
-const GROUP_SIZE: usize = 100;
+const BLOCK_SIZE: usize = 100;
 
 impl VcfFileKey {
-    fn i_group(&self) -> usize {
-        self.block / GROUP_SIZE
+    fn i_block(&self) -> usize {
+        self.i_file / BLOCK_SIZE
     }
 }
 
@@ -78,12 +78,12 @@ impl VcfFile {
         let _ = parts.next().ok_or_else(parse_failure)?;
         let chromosome =
             Chromosome::parse(parts.next().ok_or_else(parse_failure)?)?;
-        let block =
+        let i_file =
             parts.next().ok_or_else(parse_failure)?
                 .strip_prefix('b').ok_or_else(parse_failure)?
                 .parse::<usize>()?;
         let name = name.to_string();
-        let key = VcfFileKey { chromosome, block };
+        let key = VcfFileKey { chromosome, i_file };
         Ok(VcfFile { key, name })
     }
     fn parse_if_vcf(name: &str) -> Result<Option<VcfFile>, Error> {
@@ -117,35 +117,35 @@ fn group_vcf_files(conf: &Conf) -> Result<Vec<VcfFilesOfChr>, Error> {
     let mut files =  get_vcf_files_sorted(conf)?.into_iter();
     let mut files_by_chr: Vec<VcfFilesOfChr> = Vec::new();
     if let Some(file) = files.next() {
-        let mut i_group = file.key.i_group();
+        let mut i_block = file.key.i_block();
         let mut chr = file.key.chromosome;
-        let mut files_for_group: Vec<VcfFile> = vec![file];
-        let mut groups: Vec<VcfFileGroup> = Vec::new();
+        let mut files_for_block: Vec<VcfFile> = vec![file];
+        let mut blocks: Vec<VcfFileBlock> = Vec::new();
         for file in files {
             let chr_new = file.key.chromosome;
-            let i_group_new = file.key.i_group();
+            let i_block_new = file.key.i_block();
             if chr_new != chr {
-                let files_for_group_old =
-                    replace(&mut files_for_group, vec![file]);
-                let group = VcfFileGroup { i_group, files: files_for_group_old };
-                groups.push(group);
-                let groups_old = mem::take(&mut groups);
-                files_by_chr.push(VcfFilesOfChr { chromosome: chr, groups: groups_old});
+                let files_for_block_old =
+                    replace(&mut files_for_block, vec![file]);
+                let block = VcfFileBlock { i_block, files: files_for_block_old };
+                blocks.push(block);
+                let blocks_old = mem::take(&mut blocks);
+                files_by_chr.push(VcfFilesOfChr { chromosome: chr, blocks: blocks_old });
                 chr = chr_new;
-                i_group = i_group_new;
-            } else if i_group_new != i_group {
-                let files_for_group_old =
-                    replace(&mut files_for_group, vec![file]);
-                let group = VcfFileGroup { i_group, files: files_for_group_old };
-                groups.push(group);
-                i_group = i_group_new;
+                i_block = i_block_new;
+            } else if i_block_new != i_block {
+                let files_for_block_old =
+                    replace(&mut files_for_block, vec![file]);
+                let block = VcfFileBlock { i_block, files: files_for_block_old };
+                blocks.push(block);
+                i_block = i_block_new;
             } else {
-                files_for_group.push(file);
+                files_for_block.push(file);
             }
         }
-        let group = VcfFileGroup { i_group, files: files_for_group };
-        groups.push(group);
-        files_by_chr.push(VcfFilesOfChr { chromosome: chr, groups});
+        let group = VcfFileBlock { i_block, files: files_for_block };
+        blocks.push(group);
+        files_by_chr.push(VcfFilesOfChr { chromosome: chr, blocks });
     }
     Ok(files_by_chr)
 }
@@ -162,22 +162,22 @@ pub(crate) fn survey_vcfs(conf: &Conf) -> Result<(), Error> {
     println!("VCF files are here: {}", conf.data.vcfs_dir);
     let files_by_chr = group_vcf_files(conf)?;
     let mut n_files: usize = 0;
-    let mut n_groups: usize = 0;
+    let mut n_blocks: usize = 0;
     let mut n_chrs: usize = 0;
     for files_of_chr in files_by_chr {
-        let mut n_groups_for_chr: usize = 0;
+        let mut n_blocks_for_chr: usize = 0;
         let mut n_files_for_chr: usize = 0;
-        for group in &files_of_chr.groups {
-            n_groups_for_chr += 1;
-            n_files_for_chr += group.files.len()
+        for block in &files_of_chr.blocks {
+            n_blocks_for_chr += 1;
+            n_files_for_chr += block.files.len()
         }
-        println!("Chromosome {} has {} files in {} groups", files_of_chr.chromosome,
-                 n_files_for_chr, n_groups_for_chr);
+        println!("Chromosome {} has {} files in {} blocks", files_of_chr.chromosome,
+                 n_files_for_chr, n_blocks_for_chr);
         n_chrs += 1;
-        n_groups += n_groups_for_chr;
+        n_blocks += n_blocks_for_chr;
         n_files += n_files_for_chr;
     }
-    println!("There are {} files in {} groups and {} chromosomes.", n_files, n_groups, n_chrs);
+    println!("There are {} files in {} blocks and {} chromosomes.", n_files, n_blocks, n_chrs);
     Ok(())
 }
 
