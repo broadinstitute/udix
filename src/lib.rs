@@ -22,7 +22,7 @@ pub fn run(selection: Selection) -> Result<(), Error> {
         }
         Selection::Vcfs2Bed(vcfs2bed_selection) => {
             match vcfs2bed_selection {
-                Vcfs2Bed::Prepare => { todo!() }
+                Vcfs2Bed::Prepare => { apps::vcfs2bed::prepare(&conf)?; }
             }
         }
     }

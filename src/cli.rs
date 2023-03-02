@@ -30,7 +30,14 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
                 .subcommand(
                     Command::new(vcfs_sub_cmd::SURVEY)
                 )
-        ).get_matches();
+        ).subcommand(
+        Command::new(top_cmd::VCFS2BED)
+            .subcommand_required(true)
+            .arg_required_else_help(true)
+            .subcommand(
+                Command::new(vcfs2bed_sub_cmd::PREPARE)
+            )
+    ).get_matches();
     match matches.subcommand() {
         Some((top_cmd::VCFS, vcfs_matches)) => {
             match vcfs_matches.subcommand() {

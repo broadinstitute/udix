@@ -1,3 +1,5 @@
+pub(crate) mod vcfs2bed;
+
 use std::fmt::{Display, Formatter};
 use crate::apps::App::Vcfs2bed;
 

@@ -6,7 +6,7 @@ use crate::error::Error;
 use crate::dx;
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
-enum Chromosome {
+pub(crate) enum Chromosome {
     Auto(u8),
     Allo(char),
 }
@@ -33,24 +33,24 @@ impl Chromosome {
 }
 
 #[derive(Ord, PartialOrd, Eq, PartialEq)]
-struct VcfFileKey {
-    chromosome: Chromosome,
-    i_file: usize,
+pub(crate) struct VcfFileKey {
+    pub(crate) chromosome: Chromosome,
+    pub(crate) i_file: usize,
 }
 
-struct VcfFile {
-    key: VcfFileKey,
-    name: String,
+pub(crate) struct VcfFile {
+    pub(crate) key: VcfFileKey,
+    pub(crate) name: String,
 }
 
-struct VcfFileBlock {
-    i_block: usize,
-    files: Vec<VcfFile>
+pub(crate) struct VcfFileBlock {
+    pub(crate) i_block: usize,
+    pub(crate) files: Vec<VcfFile>
 }
 
-struct VcfFilesOfChr {
-    chromosome: Chromosome,
-    blocks: Vec<VcfFileBlock>
+pub(crate) struct VcfFilesOfChr {
+    pub(crate) chromosome: Chromosome,
+    pub(crate) blocks: Vec<VcfFileBlock>
 }
 
 const BLOCK_SIZE: usize = 100;
@@ -113,7 +113,7 @@ fn get_vcf_files_sorted(conf: &Conf) -> Result<Vec<VcfFile>, Error> {
     Ok(vcf_files)
 }
 
-fn group_vcf_files(conf: &Conf) -> Result<Vec<VcfFilesOfChr>, Error> {
+pub(crate) fn group_vcf_files(conf: &Conf) -> Result<Vec<VcfFilesOfChr>, Error> {
     let mut files =  get_vcf_files_sorted(conf)?.into_iter();
     let mut files_by_chr: Vec<VcfFilesOfChr> = Vec::new();
     if let Some(file) = files.next() {
