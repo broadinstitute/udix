@@ -7,7 +7,6 @@ pub(crate) enum App {
     Vcfs2bed
 }
 
-const APPS: [App; 1] = [Vcfs2bed];
 const VCFS2BED: &str = "vcfs2bed";
 
 impl App {
