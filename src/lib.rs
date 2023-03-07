@@ -1,4 +1,4 @@
-use crate::selection::{Choice, Selection, Vcfs, Vcfs2Bed};
+use crate::selection::{Choice, Config, Selection, Vcfs, Vcfs2Bed};
 use crate::error::Error;
 
 pub mod error;
@@ -23,6 +23,13 @@ pub fn run(selection: Selection) -> Result<(), Error> {
         Choice::Vcfs2Bed(vcfs2bed_selection) => {
             match vcfs2bed_selection {
                 Vcfs2Bed::Prepare => { apps::vcfs2bed::prepare(&conf)?; }
+            }
+        }
+        Choice::Config(config_selection) => {
+            match config_selection {
+                Config::Download => {
+
+                }
             }
         }
     }

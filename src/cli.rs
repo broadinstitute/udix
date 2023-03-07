@@ -1,10 +1,11 @@
 use clap::{Arg, ArgMatches, command, Command};
 use udix::error::Error;
-use udix::selection::{Choice, Params, Selection, Vcfs, Vcfs2Bed};
+use udix::selection::{Choice, Config, Params, Selection, Vcfs, Vcfs2Bed};
 
 mod top_cmd {
     pub(crate) const VCFS: &str = "vcfs";
     pub(crate) const VCFS2BED: &str = "vcfs2bed";
+    pub(crate) const CONFIG: &str = "config";
 }
 
 mod vcfs_sub_cmd {
@@ -14,6 +15,10 @@ mod vcfs_sub_cmd {
 
 mod vcfs2bed_sub_cmd {
     pub(crate) const PREPARE: &str = "prepare";
+}
+
+mod config_sub_cmd {
+    pub(crate) const DOWNLOAD: &str = "download";
 }
 
 mod params {
@@ -55,6 +60,13 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
             .arg_required_else_help(true)
             .subcommand(
                 new_command(vcfs2bed_sub_cmd::PREPARE)
+            )
+    ).subcommand(
+        Command::new(top_cmd::CONFIG)
+            .subcommand_required(true)
+            .arg_required_else_help(true)
+            .subcommand(
+                new_command(config_sub_cmd::DOWNLOAD)
             )
     ).get_matches();
     match matches.subcommand() {
@@ -101,6 +113,27 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
                     Err(Error::from(format!(
                         "Missing command. Known command is {}",
                         vcfs2bed_sub_cmd::PREPARE
+                    )))
+                }
+            }
+        }
+        Some((top_cmd::CONFIG, config_matches)) => {
+            match config_matches.subcommand() {
+                Some((config_sub_cmd::DOWNLOAD, matches)) => {
+                    let choice = Choice::Config(Config::Download);
+                    let params = get_params(matches);
+                    Ok(Selection { choice, params })
+                }
+                Some((unknown_cmd, _)) => {
+                    Err(Error::from(format!(
+                        "Unknown command {unknown_cmd}. Known command is {}",
+                        config_sub_cmd::DOWNLOAD
+                    )))
+                }
+                None => {
+                    Err(Error::from(format!(
+                        "Missing command. Known command is {}",
+                        config_sub_cmd
                     )))
                 }
             }

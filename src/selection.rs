@@ -9,7 +9,8 @@ pub struct Params {
 
 pub enum Choice {
     Vcfs(Vcfs),
-    Vcfs2Bed(Vcfs2Bed)
+    Vcfs2Bed(Vcfs2Bed),
+    Config(Config)
 }
 
 pub enum Vcfs {
@@ -18,5 +19,9 @@ pub enum Vcfs {
 
 pub enum Vcfs2Bed {
     Prepare
+}
+
+pub enum Config {
+    Download
 }
 
