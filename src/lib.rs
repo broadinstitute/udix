@@ -28,7 +28,7 @@ pub fn run(selection: Selection) -> Result<(), Error> {
         Choice::Config(config_selection) => {
             match config_selection {
                 Config::Download => {
-
+                    todo!()
                 }
             }
         }

@@ -133,7 +133,7 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
                 None => {
                     Err(Error::from(format!(
                         "Missing command. Known command is {}",
-                        config_sub_cmd
+                        config_sub_cmd::DOWNLOAD
                     )))
                 }
             }
