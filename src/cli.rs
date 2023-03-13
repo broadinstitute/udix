@@ -14,7 +14,7 @@ mod vcfs_sub_cmd {
 }
 
 mod vcfs2bed_sub_cmd {
-    pub(crate) const PREPARE: &str = "prepare";
+    pub(crate) const RUN: &str = "run";
 }
 
 mod config_sub_cmd {
@@ -59,7 +59,7 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
             .subcommand_required(true)
             .arg_required_else_help(true)
             .subcommand(
-                new_command(vcfs2bed_sub_cmd::PREPARE)
+                new_command(vcfs2bed_sub_cmd::RUN)
             )
     ).subcommand(
         Command::new(top_cmd::CONFIG)
@@ -98,21 +98,21 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
         }
         Some((top_cmd::VCFS2BED, vcfs2bed_matches)) => {
             match vcfs2bed_matches.subcommand() {
-                Some((vcfs2bed_sub_cmd::PREPARE, matches)) => {
-                    let choice = Choice::Vcfs2Bed(Vcfs2Bed::Prepare);
+                Some((vcfs2bed_sub_cmd::RUN, matches)) => {
+                    let choice = Choice::Vcfs2Bed(Vcfs2Bed::Run);
                     let params = get_params(matches);
                     Ok(Selection { choice, params })
                 }
                 Some((unknown_cmd, _)) => {
                     Err(Error::from(format!(
                         "Unknown command {unknown_cmd}. Known command is {}",
-                        vcfs2bed_sub_cmd::PREPARE
+                        vcfs2bed_sub_cmd::RUN
                     )))
                 }
                 None => {
                     Err(Error::from(format!(
                         "Missing command. Known command is {}",
-                        vcfs2bed_sub_cmd::PREPARE
+                        vcfs2bed_sub_cmd::RUN
                     )))
                 }
             }

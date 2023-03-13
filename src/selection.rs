@@ -18,7 +18,7 @@ pub enum Vcfs {
 }
 
 pub enum Vcfs2Bed {
-    Prepare
+    Run
 }
 
 pub enum Config {
