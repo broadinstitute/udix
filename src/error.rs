@@ -3,9 +3,10 @@ use std::fmt::{Debug, Display, Formatter};
 use std::num::ParseIntError;
 use std::str::Utf8Error;
 use std::string::FromUtf8Error;
+use std::time::SystemTimeError;
 
 #[derive(Copy, Clone, Debug)]
-pub enum ErrorKind { Udix, VarError, Io, Toml, Utf8, ParseInt }
+pub enum ErrorKind { Udix, VarError, Io, Toml, Utf8, ParseInt, SystemTime }
 
 #[derive(Clone)]
 pub struct Error {
@@ -73,6 +74,12 @@ impl From<FromUtf8Error> for Error {
 impl From<ParseIntError> for Error {
     fn from(parse_int_error: ParseIntError) -> Self {
         from_error(ErrorKind::ParseInt, &parse_int_error)
+    }
+}
+
+impl From<SystemTimeError> for Error {
+    fn from(system_time_error: SystemTimeError) -> Self {
+        from_error(ErrorKind::SystemTime, &system_time_error)
     }
 }
 

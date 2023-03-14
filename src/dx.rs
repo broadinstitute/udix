@@ -1,11 +1,18 @@
-use std::process::Command;
+use std::process::{Command, Output};
 use crate::error::Error;
 use std::str;
 
+const DX: &str = "dx";
+
 pub(crate) fn capture_stdout(args: &[&str]) -> Result<String, Error> {
-    let output = Command::new("dx").args(args).output()?;
+    let output = run(args)?;
+    Ok(String::from_utf8(output.stdout)?)
+}
+
+pub(crate) fn run(args: &[&str]) -> Result<Output, Error> {
+    let output = Command::new(DX).args(args).output()?;
     if output.status.success() {
-        Ok(String::from_utf8(output.stdout)?)
+        Ok(output)
     } else {
         let message =
             format!("dx failed ({}): {}", output.status,
