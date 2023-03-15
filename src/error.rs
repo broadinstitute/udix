@@ -6,7 +6,7 @@ use std::string::FromUtf8Error;
 use std::time::SystemTimeError;
 
 #[derive(Copy, Clone, Debug)]
-pub enum ErrorKind { Udix, VarError, Io, Toml, Utf8, ParseInt, SystemTime }
+pub enum ErrorKind { Udix, VarError, Io, Toml, Utf8, ParseInt, SystemTime, SerdeJson }
 
 #[derive(Clone)]
 pub struct Error {
@@ -80,6 +80,12 @@ impl From<ParseIntError> for Error {
 impl From<SystemTimeError> for Error {
     fn from(system_time_error: SystemTimeError) -> Self {
         from_error(ErrorKind::SystemTime, &system_time_error)
+    }
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(serde_json_error: serde_json::Error) -> Self {
+        from_error(ErrorKind::SerdeJson, &serde_json_error)
     }
 }
 

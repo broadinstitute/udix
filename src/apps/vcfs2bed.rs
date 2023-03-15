@@ -1,3 +1,6 @@
+use std::fs;
+use std::path::Path;
+use serde::Serialize;
 use crate::conf::Conf;
 use crate::dx;
 use crate::error::Error;
@@ -6,6 +9,12 @@ use crate::vcfs::{Chromosome, group_vcf_files, VcfFileBlock};
 struct JobStaged {
     chromosome: Chromosome,
     block: VcfFileBlock,
+}
+
+#[derive(Serialize)]
+struct Inputs {
+    vcfs: Vec<String>,
+    out_prefix: String,
 }
 
 impl JobStaged {
@@ -36,21 +45,48 @@ pub(crate) fn run_jobs(conf: &Conf, num: &Option<usize>) -> Result<(), Error> {
     Ok(())
 }
 
+fn create_inputs_definition(job: &JobStaged, conf: &Conf) -> Result<Inputs, Error> {
+    let mut vcfs: Vec<String> = Vec::new();
+    for vcf_file in &job.block.files {
+        let path_string = format!("{}{}", conf.data.vcfs_dir, vcf_file.name);
+        let path = Path::new(path_string.as_str());
+        let vcf_file_id = dx::get_id_from_path(path)?;
+        vcfs.push(vcf_file_id)
+    }
+    let out_prefix = job.name();
+    Ok(Inputs { vcfs, out_prefix })
+}
+
+fn write_inputs_definition(file: &Path, inputs: &Inputs) -> Result<(), Error> {
+    let string = serde_json::to_string_pretty(inputs)?;
+    println!("{}", string);
+    fs::write(file, string)?;
+    Ok(())
+}
+
+fn inputs_file_name(job: &JobStaged) -> String {
+    format!("inputs_{}", job.name())
+}
+
 fn run_job(job: &JobStaged, conf: &Conf) -> Result<(), Error> {
+    let inputs = create_inputs_definition(job, conf)?;
+    let work_dir = Path::new(&conf.workspace.work_dir);
+    fs::create_dir_all(work_dir)?;
     let name = job.name();
-    println!("TODO: run {}", name);
-    let vcfs =
-        job.block.files.iter()
-            .map(|file| { format!("{}{}", conf.data.vcfs_dir, file.name) })
-            .collect::<Vec<String>>()
-            .join("\",\"");
-    let vcfs_arg = format!("vcfs:array:file=[\"{vcfs}\"]");
-    println!("{vcfs_arg}");
+    let inputs_file = work_dir.join(inputs_file_name(job));
+    write_inputs_definition(&inputs_file, &inputs)?;
+    println!("Next job to run is {}", name);
+    let inputs_file_arg =
+        inputs_file.to_str().ok_or_else(|| {
+            Error::from(format!("Could not convert file path '{}' to string.",
+                                inputs_file.to_string_lossy()))
+        })?;
     let out_prefix_arg = format!("out_prefix:string={}", name);
     println!("{}", out_prefix_arg);
     let folder_arg = format!("{}/apps/vcf2bed/out/udix/", dx::get_project()?);
-    dx::run(&["run", "--name", name.as_str(), "-i", vcfs_arg.as_str(), "-i",
-        out_prefix_arg.as_str(), "--folder", folder_arg.as_str(), "/apps/vcfs2bed/vcfs2bed"])?;
+    dx::run(&["run", "--name", name.as_str(), "--input-json-file", inputs_file_arg,
+        "--folder", folder_arg.as_str(), "/apps/vcfs2bed/vcfs2bed"])?;
+    println!("Launched job {}.", name);
     Ok(())
 }
 
