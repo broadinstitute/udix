@@ -18,7 +18,7 @@ pub enum Vcfs {
 }
 
 pub enum Vcfs2Bed {
-    Run
+    Run(Option<usize>)
 }
 
 pub enum Config {

@@ -23,6 +23,7 @@ mod config_sub_cmd {
 
 mod params {
     pub(crate) const CONF_FILE: &str = "conf-file";
+    pub(crate) const NUM: &str = "num";
 }
 
 mod defaults {
@@ -30,7 +31,7 @@ mod defaults {
 }
 
 fn new_command(name: &'static str) -> Command {
-    Command::new(name).arg(Arg::new(params::CONF_FILE))
+    Command::new(name).arg(Arg::new(params::CONF_FILE).long(params::CONF_FILE))
 }
 
 fn get_params(matches: &ArgMatches) -> Params {
@@ -60,6 +61,7 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
             .arg_required_else_help(true)
             .subcommand(
                 new_command(vcfs2bed_sub_cmd::RUN)
+                    .arg(Arg::new(params::NUM).short('n').long(params::NUM))
             )
     ).subcommand(
         Command::new(top_cmd::CONFIG)
@@ -99,7 +101,10 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
         Some((top_cmd::VCFS2BED, vcfs2bed_matches)) => {
             match vcfs2bed_matches.subcommand() {
                 Some((vcfs2bed_sub_cmd::RUN, matches)) => {
-                    let choice = Choice::Vcfs2Bed(Vcfs2Bed::Run);
+                    let num =
+                        matches.get_one::<String>(params::NUM)
+                            .map(|s| s.parse::<usize>()).transpose()?;
+                    let choice = Choice::Vcfs2Bed(Vcfs2Bed::Run(num));
                     let params = get_params(matches);
                     Ok(Selection { choice, params })
                 }

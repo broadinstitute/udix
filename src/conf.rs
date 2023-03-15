@@ -47,7 +47,7 @@ fn download_conf_file(file: &Path) -> Result<(), Error> {
     if let Some(parent) = file.parent() {
         fs::create_dir_all(parent)?;
     }
-    dx::run(&["download", REMOTE_CONF_FILE, "--output", file_str])?;
+    dx::run(&["download", REMOTE_CONF_FILE, "--overwrite", "--output", file_str])?;
     Ok(())
 }
 

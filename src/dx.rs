@@ -20,3 +20,13 @@ pub(crate) fn run(args: &[&str]) -> Result<Output, Error> {
         Err(Error::from(message))
     }
 }
+
+pub(crate) fn pwd() -> Result<String, Error> {
+    capture_stdout(&["pwd"])
+}
+
+pub(crate) fn get_project() -> Result<String, Error> {
+    let pwd = pwd()?;
+    pwd.split(':').next().map(|s| s.to_string())
+        .ok_or_else(||{ Error::from(format!("Could not parse project from '{}'.", pwd))})
+}
