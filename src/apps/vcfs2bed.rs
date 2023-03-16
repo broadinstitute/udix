@@ -3,6 +3,7 @@ use std::path::Path;
 use serde::Serialize;
 use crate::conf::Conf;
 use crate::dx;
+use crate::dx::WrappedDnaNexusLink;
 use crate::error::Error;
 use crate::vcfs::{Chromosome, group_vcf_files, VcfFileBlock};
 
@@ -13,7 +14,7 @@ struct JobStaged {
 
 #[derive(Serialize)]
 struct Inputs {
-    vcfs: Vec<String>,
+    vcfs: Vec<WrappedDnaNexusLink>,
     out_prefix: String,
 }
 
@@ -46,11 +47,11 @@ pub(crate) fn run_jobs(conf: &Conf, num: &Option<usize>) -> Result<(), Error> {
 }
 
 fn create_inputs_definition(job: &JobStaged, conf: &Conf) -> Result<Inputs, Error> {
-    let mut vcfs: Vec<String> = Vec::new();
+    let mut vcfs: Vec<WrappedDnaNexusLink> = Vec::new();
     for vcf_file in &job.block.files {
         let path_string = format!("{}{}", conf.data.vcfs_dir, vcf_file.name);
         let path = Path::new(path_string.as_str());
-        let vcf_file_id = dx::get_id_from_path(path)?;
+        let vcf_file_id = dx::get_wrapped_dna_nexus_link(path)?;
         vcfs.push(vcf_file_id)
     }
     let out_prefix = job.name();
