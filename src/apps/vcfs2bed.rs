@@ -69,6 +69,8 @@ fn inputs_file_name(job: &JobStaged) -> String {
     format!("inputs_{}", job.name())
 }
 
+const INSTANCE_TYPE: &str = "mem2_hdd2_v2_x4";
+
 fn run_job(job: &JobStaged, conf: &Conf) -> Result<(), Error> {
     let inputs = create_inputs_definition(job, conf)?;
     let work_dir = Path::new(&conf.workspace.work_dir);
@@ -86,7 +88,8 @@ fn run_job(job: &JobStaged, conf: &Conf) -> Result<(), Error> {
     println!("{}", out_prefix_arg);
     let folder_arg = format!("{}/apps/vcf2bed/out/udix/", dx::get_project()?);
     dx::run(&["run", "--name", name.as_str(), "--input-json-file", inputs_file_arg,
-        "--folder", folder_arg.as_str(), "/apps/vcfs2bed/vcfs2bed"])?;
+        "--folder", folder_arg.as_str(), "--instance-type", INSTANCE_TYPE,
+        "/apps/vcfs2bed/vcfs2bed"])?;
     println!("Launched job {}.", name);
     Ok(())
 }
