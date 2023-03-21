@@ -18,7 +18,13 @@ pub enum Vcfs {
 }
 
 pub enum Vcfs2Bed {
-    Run(Option<usize>)
+    Run(Run),
+    Monitor
+}
+
+pub struct Run {
+    pub num: Option<usize>,
+    pub dry: bool
 }
 
 pub enum Config {

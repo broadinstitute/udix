@@ -10,6 +10,7 @@ use serde::Deserialize;
 pub(crate) struct Conf {
     pub(crate) data: DataConf,
     pub(crate) workspace: WorkspaceConf,
+    pub(crate) misc: Misc
 }
 
 #[derive(Deserialize)]
@@ -20,6 +21,11 @@ pub(crate) struct DataConf {
 #[derive(Deserialize)]
 pub(crate) struct WorkspaceConf {
     pub(crate) work_dir: String,
+}
+
+#[derive(Deserialize)]
+pub(crate) struct Misc {
+    pub(crate) start_date: String
 }
 
 

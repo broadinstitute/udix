@@ -10,6 +10,7 @@ mod dx;
 mod workspace;
 mod apps;
 mod job;
+mod monitor;
 
 pub fn run(selection: Selection) -> Result<(), Error> {
     let conf = conf::read_conf()?;
@@ -23,6 +24,7 @@ pub fn run(selection: Selection) -> Result<(), Error> {
         Choice::Vcfs2Bed(vcfs2bed_selection) => {
             match vcfs2bed_selection {
                 Vcfs2Bed::Run(num) => { apps::vcfs2bed::run_jobs(&conf, &num)?; }
+                Vcfs2Bed::Monitor => { apps::vcfs2bed::monitor_jobs(&conf)?; }
             }
         }
         Choice::Config(config_selection) => {

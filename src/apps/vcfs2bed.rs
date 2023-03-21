@@ -1,10 +1,13 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use serde::Serialize;
 use crate::conf::Conf;
-use crate::dx;
+use crate::{dx, monitor};
 use crate::dx::WrappedDnaNexusLink;
 use crate::error::Error;
+use crate::monitor::JobInfo;
+use crate::selection::Run;
 use crate::vcfs::{Chromosome, group_vcf_files, VcfFileBlock};
 
 struct JobStaged {
@@ -18,30 +21,48 @@ struct Inputs {
     out_prefix: String,
 }
 
+const VCFS2ED: &str = "vcfs2bed";
+
 impl JobStaged {
     fn name(&self) -> String {
-        format!("vcfs2bed_c{}_b{}", self.chromosome, self.block.i_block)
+        format!("{}_c{}_b{}", VCFS2ED, self.chromosome, self.block.i_block)
+    }
+    fn is_name(name: &str) -> bool { name.starts_with(VCFS2ED) }
+}
+
+fn should_be_run(name: &str, jobs: &HashMap<String, JobInfo>) -> bool {
+    match jobs.get(name) {
+        None => { true }
+        Some(job) => { (!job.is_done()) && (!job.is_running()) }
     }
 }
 
 fn create_job_list(conf: &Conf) -> Result<Vec<JobStaged>, Error> {
     let mut jobs: Vec<JobStaged> = Vec::new();
+    let submitted_jobs = monitor::jobs_by_name(conf)?;
     for vcf_files_of_chr in group_vcf_files(conf)? {
         let chromosome = vcf_files_of_chr.chromosome;
         for block in vcf_files_of_chr.blocks {
-            jobs.push(JobStaged { chromosome, block })
+            let job_staged = JobStaged { chromosome, block };
+            if should_be_run(&job_staged.name(), &submitted_jobs) {
+                jobs.push(job_staged)
+            }
         }
     }
     Ok(jobs)
 }
 
-pub(crate) fn run_jobs(conf: &Conf, num: &Option<usize>) -> Result<(), Error> {
+pub(crate) fn run_jobs(conf: &Conf, run: &Run) -> Result<(), Error> {
     let mut jobs = create_job_list(conf)?;
-    if let Some(num) = num {
-        jobs.truncate(*num)
+    if let Some(num) = run.num {
+        jobs.truncate(num)
     }
     for job in jobs {
-        run_job(&job, conf)?;
+        if run.dry {
+            println!("This would run {}", job.name())
+        } else {
+            run_job(&job, conf)?;
+        }
     }
     Ok(())
 }
@@ -94,4 +115,12 @@ fn run_job(job: &JobStaged, conf: &Conf) -> Result<(), Error> {
     Ok(())
 }
 
-
+pub(crate) fn monitor_jobs(conf: &Conf) -> Result<(), Error> {
+    let jobs = monitor::find_jobs(conf)?;
+    for job in jobs {
+        if JobStaged::is_name(&job.name) {
+            println!("Job {} is {}", job.name, job.state);
+        }
+    }
+    Ok(())
+}

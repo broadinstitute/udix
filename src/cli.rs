@@ -1,29 +1,35 @@
 use clap::{Arg, ArgMatches, command, Command};
 use udix::error::Error;
-use udix::selection::{Choice, Config, Params, Selection, Vcfs, Vcfs2Bed};
+use udix::selection::{Choice, Config, Params, Run, Selection, Vcfs, Vcfs2Bed};
 
 mod top_cmd {
     pub(crate) const VCFS: &str = "vcfs";
     pub(crate) const VCFS2BED: &str = "vcfs2bed";
     pub(crate) const CONFIG: &str = "config";
+    pub(crate) const CMDS: [&str; 3] = [VCFS, VCFS2BED, CONFIG];
 }
 
 mod vcfs_sub_cmd {
     pub(crate) const LIST: &str = "list";
     pub(crate) const SURVEY: &str = "survey";
+    pub(crate) const CMDS: [&str; 2] = [LIST, SURVEY];
 }
 
 mod vcfs2bed_sub_cmd {
     pub(crate) const RUN: &str = "run";
+    pub(crate) const MONITOR: &str = "monitor";
+    pub(crate) const CMDS: [&str; 2] = [RUN, MONITOR];
 }
 
 mod config_sub_cmd {
     pub(crate) const DOWNLOAD: &str = "download";
+    pub(crate) const CMDS: [&str; 1] = [DOWNLOAD];
 }
 
 mod params {
     pub(crate) const CONF_FILE: &str = "conf-file";
     pub(crate) const NUM: &str = "num";
+    pub(crate) const DRY: &str = "dry";
 }
 
 mod defaults {
@@ -39,6 +45,22 @@ fn get_params(matches: &ArgMatches) -> Params {
         matches.get_one::<String>(params::CONF_FILE).cloned()
             .unwrap_or(defaults::CONF_FILE.to_string());
     Params { conf_file }
+}
+
+fn known_cmds_are(cmds: &[&str]) -> String {
+    if cmds.len() == 1 {
+        format!("Known command is {}", cmds.join(", "))
+    } else {
+        format!("Known commands are {}", cmds.join(", "))
+    }
+}
+
+fn unknown_cmd_error(cmd: &str, cmds: &[&str]) -> Error {
+    Error::from(format!("Unknown command {}. {}", cmd, known_cmds_are(cmds)))
+}
+
+fn missing_cmd_error(cmds: &[&str]) -> Error {
+    Error::from(format!("Missing command. {}", known_cmds_are(cmds)))
 }
 
 pub(crate) fn get_selection() -> Result<Selection, Error> {
@@ -62,7 +84,11 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
             .subcommand(
                 new_command(vcfs2bed_sub_cmd::RUN)
                     .arg(Arg::new(params::NUM).short('n').long(params::NUM))
-            )
+                    .arg(Arg::new(params::DRY).short('d').long(params::DRY)
+                        .num_args(0).action(clap::ArgAction::SetTrue))
+            ).subcommand(
+            new_command(vcfs2bed_sub_cmd::MONITOR)
+        )
     ).subcommand(
         Command::new(top_cmd::CONFIG)
             .subcommand_required(true)
@@ -85,17 +111,9 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
                     Ok(Selection { choice, params })
                 }
                 Some((unknown_cmd, _)) => {
-                    Err(Error::from(format!(
-                        "Unknown command {unknown_cmd}. Known commands are {} and {}",
-                        vcfs_sub_cmd::LIST, vcfs_sub_cmd::SURVEY
-                    )))
+                    Err(unknown_cmd_error(unknown_cmd, &vcfs_sub_cmd::CMDS))
                 }
-                None => {
-                    Err(Error::from(format!(
-                        "Missing command. Known commands are {} and {}",
-                        vcfs_sub_cmd::LIST, vcfs_sub_cmd::SURVEY
-                    )))
-                }
+                None => { Err(missing_cmd_error(&vcfs_sub_cmd::CMDS)) }
             }
         }
         Some((top_cmd::VCFS2BED, vcfs2bed_matches)) => {
@@ -104,21 +122,22 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
                     let num =
                         matches.get_one::<String>(params::NUM)
                             .map(|s| s.parse::<usize>()).transpose()?;
-                    let choice = Choice::Vcfs2Bed(Vcfs2Bed::Run(num));
+                    let dry = matches.get_flag(params::DRY);
+                    let run = Run { num, dry };
+                    let choice = Choice::Vcfs2Bed(Vcfs2Bed::Run(run));
+                    let params = get_params(matches);
+                    Ok(Selection { choice, params })
+                }
+                Some((vcfs2bed_sub_cmd::MONITOR, matches)) => {
+                    let choice = Choice::Vcfs2Bed(Vcfs2Bed::Monitor);
                     let params = get_params(matches);
                     Ok(Selection { choice, params })
                 }
                 Some((unknown_cmd, _)) => {
-                    Err(Error::from(format!(
-                        "Unknown command {unknown_cmd}. Known command is {}",
-                        vcfs2bed_sub_cmd::RUN
-                    )))
+                    Err(unknown_cmd_error(unknown_cmd, &vcfs2bed_sub_cmd::CMDS))
                 }
                 None => {
-                    Err(Error::from(format!(
-                        "Missing command. Known command is {}",
-                        vcfs2bed_sub_cmd::RUN
-                    )))
+                    Err(missing_cmd_error(&vcfs2bed_sub_cmd::CMDS))
                 }
             }
         }
@@ -130,30 +149,18 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
                     Ok(Selection { choice, params })
                 }
                 Some((unknown_cmd, _)) => {
-                    Err(Error::from(format!(
-                        "Unknown command {unknown_cmd}. Known command is {}",
-                        config_sub_cmd::DOWNLOAD
-                    )))
+                    Err(unknown_cmd_error(unknown_cmd, &config_sub_cmd::CMDS))
                 }
                 None => {
-                    Err(Error::from(format!(
-                        "Missing command. Known command is {}",
-                        config_sub_cmd::DOWNLOAD
-                    )))
+                    Err(missing_cmd_error(&config_sub_cmd::CMDS))
                 }
             }
         }
         Some((unknown_cmd, _)) => {
-            Err(Error::from(format!(
-                "Unknown command {unknown_cmd}. Known commands are {} and {}", top_cmd::VCFS,
-                top_cmd::VCFS2BED
-            )))
+            Err(unknown_cmd_error(unknown_cmd, &top_cmd::CMDS))
         }
         None => {
-            Err(Error::from(format!(
-                "Missing command. Known commands are {} and {}", top_cmd::VCFS,
-                top_cmd::VCFS2BED
-            )))
+            Err(missing_cmd_error(&top_cmd::CMDS))
         }
     }
 }
