@@ -3,21 +3,12 @@ use crate::conf::Conf;
 use crate::dx;
 use crate::error::Error;
 use serde::Deserialize;
+use crate::job::JobState;
 
 #[derive(Deserialize)]
 pub(crate) struct JobInfo {
     pub(crate) name: String,
-    pub(crate) state: String
-}
-
-mod state {
-    pub(crate) const DONE: &str = "done";
-    pub(crate) const RUNNING: &str = "running";
-}
-
-impl JobInfo {
-    pub(crate) fn is_done(&self) -> bool { self.state == state::DONE }
-    pub(crate) fn is_running(&self) -> bool { self.state == state::RUNNING }
+    pub(crate) state: JobState
 }
 
 pub(crate) fn find_jobs(conf: &Conf) -> Result<Vec<JobInfo>, Error> {
