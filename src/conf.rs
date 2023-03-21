@@ -28,6 +28,19 @@ pub(crate) struct Misc {
     pub(crate) start_date: String
 }
 
+fn fix_home_dir(file: &str) -> Result<String, Error> {
+    if let Some(file_in_home) = file.strip_prefix("~/") {
+        Ok(format!("{}/{}", env::get_home()?, file_in_home))
+    } else {
+        Ok(file.to_string())
+    }
+}
+
+impl WorkspaceConf {
+    pub(crate) fn work_dir_fixed(&self) -> Result<String, Error> {
+        fix_home_dir(&self.work_dir)
+    }
+}
 
 fn get_local_conf_file() -> Result<PathBuf, Error> {
     Ok(PathBuf::from(format!("{}/.config/udix/udix.toml", env::get_home()?)))

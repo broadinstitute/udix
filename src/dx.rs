@@ -34,19 +34,6 @@ pub(crate) fn get_project() -> Result<String, Error> {
         .ok_or_else(|| { Error::from(format!("Could not parse project from '{}'.", pwd)) })
 }
 
-pub(crate) fn get_id_from_path(path: &Path) -> Result<String, Error> {
-    let path_str =
-        path.to_str().ok_or_else(|| {
-            Error::from(format!("Could not convert path '{}' to string.", path.to_string_lossy()))
-        })?;
-    let json_string = capture_stdout(&["describe", "--json", path_str])?;
-    let json_value: Value = serde_json::from_str(json_string.as_str())?;
-    let id = json_value["id"].as_str().ok_or_else(|| {
-        Error::from(format!("Could not get id for '{}'", path.to_string_lossy()))
-    })?.to_string();
-    Ok(id)
-}
-
 #[derive(Serialize)]
 pub(crate) struct DnaNexusLink {
     id: String,

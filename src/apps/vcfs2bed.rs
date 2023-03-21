@@ -94,7 +94,8 @@ const INSTANCE_TYPE: &str = "mem2_hdd2_v2_x4";
 
 fn run_job(job: &JobStaged, conf: &Conf) -> Result<(), Error> {
     let inputs = create_inputs_definition(job, conf)?;
-    let work_dir = Path::new(&conf.workspace.work_dir);
+    let work_dir_string = conf.workspace.work_dir_fixed()?;
+    let work_dir = Path::new(&work_dir_string);
     fs::create_dir_all(work_dir)?;
     let name = job.name();
     let inputs_file = work_dir.join(inputs_file_name(job));

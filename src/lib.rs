@@ -7,7 +7,6 @@ mod env;
 mod conf;
 mod vcfs;
 mod dx;
-mod workspace;
 mod apps;
 mod job;
 mod monitor;
