@@ -82,7 +82,6 @@ fn create_inputs_definition(job: &JobStaged, conf: &Conf) -> Result<Inputs, Erro
 
 fn write_inputs_definition(file: &Path, inputs: &Inputs) -> Result<(), Error> {
     let string = serde_json::to_string_pretty(inputs)?;
-    println!("{}", string);
     fs::write(file, string)?;
     Ok(())
 }
@@ -107,13 +106,11 @@ fn run_job(job: &JobStaged, conf: &Conf) -> Result<(), Error> {
             Error::from(format!("Could not convert file path '{}' to string.",
                                 inputs_file.to_string_lossy()))
         })?;
-    let out_prefix_arg = format!("out_prefix:string={}", name);
-    println!("{}", out_prefix_arg);
     let folder_arg = format!("{}/apps/vcf2bed/out/udix/", dx::get_project()?);
     dx::run(&["run", "--name", name.as_str(), "--input-json-file", inputs_file_arg,
         "--folder", folder_arg.as_str(), "--instance-type", INSTANCE_TYPE,
         "/apps/vcfs2bed/vcfs2bed"])?;
-    println!("Launched job {}.", name);
+    println!("Launched job {} with input file {}.", name, inputs_file_arg);
     Ok(())
 }
 
