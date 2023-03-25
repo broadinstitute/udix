@@ -20,6 +20,18 @@ mod names {
     pub(crate) const DONE: &str = "done";
 }
 
+impl JobState {
+    pub(crate) fn needs_to_be_submitted(&self) -> bool {
+        match self {
+            JobState::Restartable => { false }
+            JobState::Runnable => { false }
+            JobState::Running => { false }
+            JobState::Failed => { true }
+            JobState::Done => { false }
+        }
+    }
+}
+
 
 impl TryFrom<&str> for JobState {
     type Error = Error;

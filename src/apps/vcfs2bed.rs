@@ -6,7 +6,6 @@ use crate::conf::Conf;
 use crate::{dx, monitor};
 use crate::dx::WrappedDnaNexusLink;
 use crate::error::Error;
-use crate::job::JobState;
 use crate::monitor::JobInfo;
 use crate::selection::Run;
 use crate::vcfs::{Chromosome, group_vcf_files, VcfFileBlock};
@@ -34,7 +33,7 @@ impl JobStaged {
 fn should_be_run(name: &str, jobs: &HashMap<String, JobInfo>) -> bool {
     match jobs.get(name) {
         None => { true }
-        Some(job) => { job.state != JobState::Running && job.state != JobState::Done }
+        Some(job) => { job.state.needs_to_be_submitted() }
     }
 }
 
