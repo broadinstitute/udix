@@ -37,14 +37,19 @@ fn should_be_run(name: &str, jobs: &HashMap<String, JobInfo>) -> bool {
     }
 }
 
-fn create_job_list(conf: &Conf) -> Result<Vec<JobStaged>, Error> {
+fn create_job_list(conf: &Conf, pat: &Option<String>) -> Result<Vec<JobStaged>, Error> {
     let mut jobs: Vec<JobStaged> = Vec::new();
     let submitted_jobs = monitor::jobs_by_name(conf)?;
     for vcf_files_of_chr in group_vcf_files(conf)? {
         let chromosome = vcf_files_of_chr.chromosome;
         for block in vcf_files_of_chr.blocks {
             let job_staged = JobStaged { chromosome, block };
-            if should_be_run(&job_staged.name(), &submitted_jobs) {
+            let passes_pat =
+                match pat {
+                    None => { true }
+                    Some(pat) => { job_staged.name().contains(pat) }
+                };
+            if passes_pat && should_be_run(&job_staged.name(), &submitted_jobs) {
                 jobs.push(job_staged)
             }
         }
@@ -53,7 +58,7 @@ fn create_job_list(conf: &Conf) -> Result<Vec<JobStaged>, Error> {
 }
 
 pub(crate) fn run_jobs(conf: &Conf, run: &Run) -> Result<(), Error> {
-    let mut jobs = create_job_list(conf)?;
+    let mut jobs = create_job_list(conf, &run.pat)?;
     if let Some(num) = run.num {
         jobs.truncate(num)
     }

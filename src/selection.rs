@@ -24,7 +24,8 @@ pub enum Vcfs2Bed {
 
 pub struct Run {
     pub num: Option<usize>,
-    pub dry: bool
+    pub dry: bool,
+    pub pat: Option<String>
 }
 
 pub enum Config {

@@ -30,6 +30,7 @@ mod params {
     pub(crate) const CONF_FILE: &str = "conf-file";
     pub(crate) const NUM: &str = "num";
     pub(crate) const DRY: &str = "dry";
+    pub(crate) const PAT: &str = "pat";
 }
 
 mod defaults {
@@ -86,6 +87,7 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
                     .arg(Arg::new(params::NUM).short('n').long(params::NUM))
                     .arg(Arg::new(params::DRY).short('d').long(params::DRY)
                         .num_args(0).action(clap::ArgAction::SetTrue))
+                    .arg(Arg::new(params::PAT).short('p').long(params::PAT))
             ).subcommand(
             new_command(vcfs2bed_sub_cmd::MONITOR)
         )
@@ -123,7 +125,8 @@ pub(crate) fn get_selection() -> Result<Selection, Error> {
                         matches.get_one::<String>(params::NUM)
                             .map(|s| s.parse::<usize>()).transpose()?;
                     let dry = matches.get_flag(params::DRY);
-                    let run = Run { num, dry };
+                    let pat = matches.get_one::<String>(params::PAT).cloned();
+                    let run = Run { num, dry, pat };
                     let choice = Choice::Vcfs2Bed(Vcfs2Bed::Run(run));
                     let params = get_params(matches);
                     Ok(Selection { choice, params })
