@@ -7,7 +7,7 @@ use crate::{dx, monitor};
 use crate::dx::WrappedDnaNexusLink;
 use crate::error::Error;
 use crate::monitor::JobInfo;
-use crate::selection::Run;
+use crate::selection::RunChoice;
 use crate::vcfs::{Chromosome, group_vcf_files, VcfFileBlock};
 
 struct JobStaged {
@@ -57,7 +57,7 @@ fn create_job_list(conf: &Conf, pat: &Option<String>) -> Result<Vec<JobStaged>, 
     Ok(jobs)
 }
 
-pub(crate) fn run_jobs(conf: &Conf, run: &Run) -> Result<(), Error> {
+pub(crate) fn run_jobs(conf: &Conf, run: &RunChoice) -> Result<(), Error> {
     let mut jobs = create_job_list(conf, &run.pat)?;
     if let Some(num) = run.num {
         jobs.truncate(num)

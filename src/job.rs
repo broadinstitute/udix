@@ -22,13 +22,7 @@ mod names {
 
 impl JobState {
     pub(crate) fn needs_to_be_submitted(&self) -> bool {
-        match self {
-            JobState::Restartable => { false }
-            JobState::Runnable => { false }
-            JobState::Running => { false }
-            JobState::Failed => { true }
-            JobState::Done => { false }
-        }
+        *self == JobState::Failed
     }
 }
 

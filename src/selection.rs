@@ -9,7 +9,8 @@ pub struct Params {
 
 pub enum Choice {
     Vcfs(Vcfs),
-    Vcfs2Bed(Vcfs2Bed),
+    Vcfs2Bed(AppChoice),
+    BedMerge(AppChoice),
     Config(Config)
 }
 
@@ -17,12 +18,12 @@ pub enum Vcfs {
     List, Survey
 }
 
-pub enum Vcfs2Bed {
-    Run(Run),
+pub enum AppChoice {
+    Run(RunChoice),
     Monitor
 }
 
-pub struct Run {
+pub struct RunChoice {
     pub num: Option<usize>,
     pub dry: bool,
     pub pat: Option<String>
