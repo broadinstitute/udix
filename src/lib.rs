@@ -1,3 +1,5 @@
+use crate::apps::bed_merge::{AppBedMerge, JobBedMerge};
+use crate::apps::vcfs2bed::{AppVcfs2Bed, JobVcfs2Bed};
 use crate::selection::{Choice, Config, Selection, Vcfs, AppChoice};
 use crate::error::Error;
 
@@ -23,17 +25,17 @@ pub fn run(selection: Selection) -> Result<(), Error> {
         Choice::Vcfs2Bed(vcfs2bed_selection) => {
             match vcfs2bed_selection {
                 AppChoice::Run(run_choice) => {
-                    apps::vcfs2bed::run_jobs(&conf, &run_choice)?;
+                    apps::run_jobs::<AppVcfs2Bed>(&conf, &run_choice)?;
                 }
-                AppChoice::Monitor => { apps::vcfs2bed::monitor_jobs(&conf)?; }
+                AppChoice::Monitor => { apps::monitor_jobs::<JobVcfs2Bed>(&conf)?; }
             }
         }
         Choice::BedMerge(bed_merge_selection) => {
             match bed_merge_selection {
                 AppChoice::Run(run_choice) => {
-                    apps::bed_merge::run_jobs(&conf, &run_choice)?;
+                    apps::run_jobs::<AppBedMerge>(&conf, &run_choice)?;
                 }
-                AppChoice::Monitor => { apps::bed_merge::monitor_jobs(&conf)?; }
+                AppChoice::Monitor => { apps::monitor_jobs::<JobBedMerge>(&conf)?; }
             }
         }
         Choice::Config(config_selection) => {
