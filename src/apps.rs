@@ -4,7 +4,7 @@ use std::path::Path;
 use serde::Serialize;
 use crate::conf::Conf;
 use crate::error::Error;
-use crate::monitor;
+use crate::{dx, monitor};
 use crate::monitor::JobInfo;
 use crate::selection::RunChoice;
 
@@ -19,8 +19,12 @@ pub(crate) trait JobStaged {
 
 pub(crate) trait App {
     type Job: JobStaged;
+    type Inputs: Serialize;
+    const INSTANCE_TYPE: &'static str;
+    const APP_PATH: &'static str;
+    const OUT_DIR_PATH: &'static str;
     fn create_job_list_unfiltered(conf: &Conf) -> Result<Vec<Self::Job>, Error>;
-    fn run_job(job: &Self::Job, conf: &Conf) -> Result<(), Error>;
+    fn create_inputs_definition(job: &Self::Job, conf: &Conf) -> Result<Self::Inputs, Error>;
 }
 
 fn should_be_run(name: &str, jobs: &HashMap<String, JobInfo>) -> bool {
@@ -58,7 +62,7 @@ pub(crate) fn run_jobs<A: App>(conf: &Conf, run: &RunChoice) -> Result<(), Error
         if run.dry {
             println!("This would run {}", job.name())
         } else {
-            A::run_job(&job, conf)?;
+            run_job::<A>(&job, conf)?;
         }
     }
     Ok(())
@@ -81,6 +85,28 @@ pub(crate) fn monitor_jobs<J: JobStaged>(conf: &Conf) -> Result<(), Error> {
             println!("Job {} is {}", job.name, job.state);
         }
     }
+    Ok(())
+}
+
+fn run_job<A: App>(job: &A::Job, conf: &Conf) -> Result<(), Error> {
+    let inputs = A::create_inputs_definition(job, conf)?;
+    let work_dir_string = conf.workspace.work_dir_fixed()?;
+    let work_dir = Path::new(&work_dir_string);
+    fs::create_dir_all(work_dir)?;
+    let name = job.name();
+    let inputs_file = work_dir.join(inputs_file_name(job));
+    write_inputs_definition(&inputs_file, &inputs)?;
+    println!("Next job to run is {}", name);
+    let inputs_file_arg =
+        inputs_file.to_str().ok_or_else(|| {
+            Error::from(format!("Could not convert file path '{}' to string.",
+                                inputs_file.to_string_lossy()))
+        })?;
+    let folder_arg = format!("{}{}", dx::get_project()?, A::OUT_DIR_PATH);
+    dx::run(&["run", "--name", name.as_str(), "--input-json-file", inputs_file_arg,
+        "--folder", folder_arg.as_str(), "--instance-type", A::INSTANCE_TYPE,
+        A::APP_PATH])?;
+    println!("Launched job {} with input file {}.", name, inputs_file_arg);
     Ok(())
 }
 
