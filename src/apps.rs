@@ -14,7 +14,7 @@ pub(crate) mod bed_merge;
 pub(crate) trait JobStaged {
     const PREFIX: &'static str;
     fn name(&self) -> String;
-    fn is_name(name: &str) -> bool;
+    fn is_name(name: &str) -> bool { name.starts_with(Self::PREFIX) }
 }
 
 pub(crate) trait App {

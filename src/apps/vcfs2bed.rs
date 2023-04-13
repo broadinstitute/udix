@@ -28,7 +28,6 @@ impl JobStaged for JobVcfs2Bed {
     fn name(&self) -> String {
         format!("{}_c{}_b{}", Self::PREFIX, self.chromosome, self.block.i_block)
     }
-    fn is_name(name: &str) -> bool { name.starts_with(Self::PREFIX) }
 }
 
 impl App for AppVcfs2Bed {
