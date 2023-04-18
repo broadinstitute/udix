@@ -102,7 +102,7 @@ fn run_job<A: App>(job: &A::Job, conf: &Conf) -> Result<(), Error> {
             Error::from(format!("Could not convert file path '{}' to string.",
                                 inputs_file.to_string_lossy()))
         })?;
-    let folder_arg = format!("{}{}", dx::get_project()?, A::OUT_DIR_PATH);
+    let folder_arg = format!("{}:{}", dx::get_project()?, A::OUT_DIR_PATH);
     dx::run(&["run", "--name", name.as_str(), "--input-json-file", inputs_file_arg,
         "--folder", folder_arg.as_str(), "--instance-type", A::INSTANCE_TYPE,
         A::APP_PATH])?;

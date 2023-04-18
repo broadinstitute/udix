@@ -35,7 +35,7 @@ impl App for AppVcfs2Bed {
     type Inputs = Inputs;
     const INSTANCE_TYPE: &'static str = "mem2_hdd2_v2_x4";
     const APP_PATH: &'static str = "/apps/vcfs2bed/vcfs2bed";
-    const OUT_DIR_PATH: &'static str = "/apps/vcf2bed/out/udix/";
+    const OUT_DIR_PATH: &'static str = "/apps/vcfs2bed/out/udix/";
 
     fn create_job_list_unfiltered(conf: &Conf) -> Result<Vec<JobVcfs2Bed>, Error> {
         let mut jobs: Vec<JobVcfs2Bed> = Vec::new();
