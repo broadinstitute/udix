@@ -1,32 +1,38 @@
 pub struct Selection {
     pub choice: Choice,
-    pub params: Params
+    pub params: Params,
 }
 
 pub struct Params {
-    pub conf_file: String
+    pub conf_file: String,
+}
+
+pub enum DataSet {
+    Vcfs,
+    Beds,
 }
 
 pub enum Choice {
-    Vcfs(Vcfs),
+    Data { data_set: DataSet, data_choice: DataChoice },
     Vcfs2Bed(AppChoice),
     BedMerge(AppChoice),
-    Config(Config)
+    Config(Config),
 }
 
-pub enum Vcfs {
-    List, Survey
+pub enum DataChoice {
+    List,
+    Survey,
 }
 
 pub enum AppChoice {
     Run(RunChoice),
-    Monitor
+    Monitor,
 }
 
 pub struct RunChoice {
     pub num: Option<usize>,
     pub dry: bool,
-    pub pat: Option<String>
+    pub pat: Option<String>,
 }
 
 pub enum Config {

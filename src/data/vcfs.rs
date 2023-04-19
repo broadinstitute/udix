@@ -71,7 +71,7 @@ impl Display for Chromosome {
 }
 
 impl VcfFile {
-    fn parse_base(name: &str, base_name: &str) -> Result<VcfFile, Error> {
+    fn parse_basename(name: &str, base_name: &str) -> Result<VcfFile, Error> {
         let mut parts = base_name.split('_');
         let parse_failure =
             || { Error::from(format!("Cannot parse VCF file '{}'.", name)) };
@@ -88,7 +88,7 @@ impl VcfFile {
     }
     fn parse_if_vcf(name: &str) -> Result<Option<VcfFile>, Error> {
         if let Some(base_name) = name.strip_suffix(".vcf.gz") {
-            Ok(Some(VcfFile::parse_base(name, base_name)?))
+            Ok(Some(VcfFile::parse_basename(name, base_name)?))
         } else {
             Ok(None)
         }

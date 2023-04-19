@@ -2,7 +2,7 @@ use crate::apps::{App, JobStaged};
 use crate::conf::Conf;
 use crate::error::Error;
 use serde::Serialize;
-use crate::vcfs::Chromosome;
+use crate::data::vcfs::Chromosome;
 
 pub(crate) struct JobBedMerge {
     chromosome: Chromosome,

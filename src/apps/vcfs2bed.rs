@@ -5,7 +5,7 @@ use crate::dx;
 use crate::apps::{App, JobStaged};
 use crate::dx::WrappedDnaNexusLink;
 use crate::error::Error;
-use crate::vcfs::{Chromosome, group_vcf_files, VcfFileBlock};
+use crate::data::vcfs::{Chromosome, group_vcf_files, VcfFileBlock};
 
 pub(crate) struct JobVcfs2Bed {
     chromosome: Chromosome,

@@ -1,25 +1,35 @@
 use crate::apps::bed_merge::{AppBedMerge, JobBedMerge};
 use crate::apps::vcfs2bed::{AppVcfs2Bed, JobVcfs2Bed};
-use crate::selection::{Choice, Config, Selection, Vcfs, AppChoice};
+use crate::selection::{Choice, Config, Selection, DataChoice, AppChoice, DataSet};
 use crate::error::Error;
 
 pub mod error;
 pub mod selection;
 mod env;
 mod conf;
-mod vcfs;
 mod dx;
 mod apps;
 mod job;
 mod monitor;
+mod data;
 
 pub fn run(selection: Selection) -> Result<(), Error> {
     let conf = conf::read_conf()?;
     match selection.choice {
-        Choice::Vcfs(vcfs_selection) => {
-            match vcfs_selection {
-                Vcfs::List => { vcfs::list_vcfs(&conf)?; }
-                Vcfs::Survey => { vcfs::survey_vcfs(&conf)? }
+        Choice::Data {data_set, data_choice } => {
+            match data_set {
+                DataSet::Vcfs => {
+                    match data_choice {
+                        DataChoice::List => { data::vcfs::list_vcfs(&conf)?; }
+                        DataChoice::Survey => { data::vcfs::survey_vcfs(&conf)? }
+                    }
+                }
+                DataSet::Beds => {
+                    match data_choice {
+                        DataChoice::List => { data::beds::list_beds(&conf)?; }
+                        DataChoice::Survey => { data::beds::survey_beds(&conf)? }
+                    }
+                }
             }
         }
         Choice::Vcfs2Bed(vcfs2bed_selection) => {

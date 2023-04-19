@@ -16,6 +16,7 @@ pub(crate) struct Conf {
 #[derive(Deserialize)]
 pub(crate) struct DataConf {
     pub(crate) vcfs_dir: String,
+    pub(crate) beds_dir: String,
 }
 
 #[derive(Deserialize)]
