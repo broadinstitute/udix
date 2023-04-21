@@ -1,36 +1,9 @@
-use std::fmt::{Display, Formatter};
 use std::mem;
 use std::mem::replace;
 use crate::conf::Conf;
+use crate::data::chromosome::Chromosome;
 use crate::error::Error;
 use crate::dx;
-
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
-pub(crate) enum Chromosome {
-    Auto(u8),
-    Allo(char),
-}
-
-impl Chromosome {
-    pub(crate) fn parse(string: &str) -> Result<Chromosome, Error> {
-        let stripped =
-            if let Some(stripped) = string.strip_prefix("chr") {
-                stripped
-            } else if let Some(stripped) = string.strip_prefix('c') {
-                stripped
-            } else {
-                string
-            };
-        if stripped == "X" {
-            Ok(Chromosome::Allo('X'))
-        } else if stripped == "Y" {
-            Ok(Chromosome::Allo('Y'))
-        } else {
-            let number = stripped.parse::<u8>()?;
-            Ok(Chromosome::Auto(number))
-        }
-    }
-}
 
 #[derive(Ord, PartialOrd, Eq, PartialEq)]
 pub(crate) struct VcfFileKey {
@@ -58,15 +31,6 @@ const BLOCK_SIZE: usize = 100;
 impl VcfFileKey {
     fn i_block(&self) -> usize {
         self.i_file / BLOCK_SIZE
-    }
-}
-
-impl Display for Chromosome {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Chromosome::Auto(num) => { write!(f, "{}", num) }
-            Chromosome::Allo(sym) => { write!(f, "{}", sym) }
-        }
     }
 }
 

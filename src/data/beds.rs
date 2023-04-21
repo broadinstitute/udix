@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use crate::conf::Conf;
+use crate::data::chromosome::Chromosome;
 use crate::dx;
 use crate::error::Error;
 
@@ -9,13 +10,54 @@ enum FileType {
     Fam,
 }
 
+#[derive(Ord, PartialOrd, Eq, PartialEq, Clone)]
 pub(crate) struct BedBundle {
-    basename: String,
+    prefix: String,
+    chromosome: Chromosome,
+    i_block: usize,
+}
+
+impl BedBundle {
+    fn cannot_parse(basename: &str) -> Error {
+        Error::from(
+            format!("Cannot parse {} as <prefix>_c<chromosome_b<i_block>", basename)
+        )
+    }
+    fn parse(basename: &str) -> Result<BedBundle, Error> {
+        let mut parts = basename.split('_');
+        let prefix =
+            parts.next().ok_or_else(|| { BedBundle::cannot_parse(basename) })?.to_string();
+        let chromosome =
+            Chromosome::parse(
+                parts.next().ok_or_else(|| { BedBundle::cannot_parse(basename) })?
+            )?;
+        let i_block =
+            parts.next().ok_or_else(|| { BedBundle::cannot_parse(basename) })?
+                .strip_prefix('b').ok_or_else(|| { BedBundle::cannot_parse(basename) })?
+                .parse::<usize>()?;
+        if parts.next().is_some() {
+            Err(BedBundle::cannot_parse(basename))?
+        }
+        Ok(BedBundle { prefix, chromosome, i_block })
+    }
+    fn basename(&self) -> String {
+        format!("{}_c{}_b{}", self.prefix, self.chromosome, self.i_block)
+    }
+}
+
+impl Display for FileType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FileType::Bed => { write!(f, "bed") }
+            FileType::Bim => { write!(f, "bim") }
+            FileType::Fam => { write!(f, "fam") }
+        }
+    }
 }
 
 impl Display for BedBundle {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}.{{bed,bim,fam}}", self.basename)
+        write!(f, "{}.{{bed,bim,fam}}", self.basename())
     }
 }
 
@@ -42,10 +84,34 @@ impl FileMatchBuffer {
         }
     }
     fn push(&mut self, file_type: &FileType, basename: &str) -> Result<Option<BedBundle>, Error> {
-        todo!()
+        if *self.got_file_type(file_type) {
+            Err(self.unmatched_error())
+        } else {
+            self.basename = basename.to_string();
+            *self.got_file_type(file_type) = true;
+            if self.got_bed && self.got_bim && self.got_fam {
+                self.got_bed = false;
+                self.got_bim = false;
+                self.got_fam = false;
+                Ok(Some(BedBundle::parse(basename)?))
+            } else {
+                Ok(None)
+            }
+        }
+    }
+    fn file_name(&self, file_type: &FileType) -> String {
+        format!("{}.{}", self.basename, file_type)
     }
     fn unmatched_error(&self) -> Error {
-        todo!()
+        fn quantifier(got_one: bool) -> &'static str {
+            if got_one { "a" } else { "no" }
+        }
+        let message =
+            format!("Got {} {}, {} {}, and {} {}.",
+                    quantifier(self.got_bed), self.file_name(&FileType::Bed),
+                    quantifier(self.got_bim), self.file_name(&FileType::Bim),
+                    quantifier(self.got_fam), self.file_name(&FileType::Fam));
+        Error::from(message)
     }
     fn is_empty(&self) -> bool { (!self.got_bed) && (!self.got_bim) && (!self.got_fam) }
 }
@@ -73,6 +139,7 @@ fn get_bed_bundles(conf: &Conf) -> Result<Vec<BedBundle>, Error> {
         println!("{}", line);
     }
     if file_match_buffer.is_empty() {
+        bed_bundles.sort();
         Ok(bed_bundles)
     } else {
         Err(file_match_buffer.unmatched_error())
@@ -80,11 +147,8 @@ fn get_bed_bundles(conf: &Conf) -> Result<Vec<BedBundle>, Error> {
 }
 
 pub(crate) fn list_beds(conf: &Conf) -> Result<(), Error> {
-    let stdout = dx::capture_stdout(&["ls", conf.data.beds_dir.as_str()])?;
-    let mut lines: Vec<&str> = stdout.lines().collect();
-    lines.sort();
-    for line in lines {
-        println!("{}", line);
+    for bed_bundle in get_bed_bundles(conf)? {
+        println!("{}", bed_bundle)
     }
     Ok(())
 }
