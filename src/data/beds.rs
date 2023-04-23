@@ -1,4 +1,5 @@
 use std::fmt::{Display, Formatter};
+use std::mem;
 use crate::conf::Conf;
 use crate::data::chromosome::Chromosome;
 use crate::dx;
@@ -15,6 +16,11 @@ pub(crate) struct BedBundle {
     prefix: String,
     chromosome: Chromosome,
     i_block: usize,
+}
+
+struct BedBundlesOfChr {
+    chromosome: Chromosome,
+    bed_bundles: Vec<BedBundle>,
 }
 
 impl BedBundle {
@@ -136,7 +142,6 @@ fn get_bed_bundles(conf: &Conf) -> Result<Vec<BedBundle>, Error> {
         if let Some(file_bundle) = bed_bundle_opt_res? {
             bed_bundles.push(file_bundle)
         }
-        println!("{}", line);
     }
     if file_match_buffer.is_empty() {
         bed_bundles.sort();
@@ -144,6 +149,28 @@ fn get_bed_bundles(conf: &Conf) -> Result<Vec<BedBundle>, Error> {
     } else {
         Err(file_match_buffer.unmatched_error())
     }
+}
+
+fn get_bed_bundles_by_chrom(conf: &Conf) -> Result<Vec<BedBundlesOfChr>, Error> {
+    let mut bed_bundles_of_chrs: Vec<BedBundlesOfChr> = Vec::new();
+    let mut bed_bundle_iter = get_bed_bundles(conf)?.into_iter();
+    if let Some(bed_bundle) = bed_bundle_iter.next() {
+        let mut chromosome = bed_bundle.chromosome;
+        let mut bed_bundles_new: Vec<BedBundle> = vec!(bed_bundle);
+        for bed_bundle_new in bed_bundle_iter {
+            if bed_bundle_new.chromosome == chromosome {
+                bed_bundles_new.push(bed_bundle_new)
+            } else {
+                let chromosome_new = bed_bundle_new.chromosome;
+                let bed_bundles =
+                    mem::replace(&mut bed_bundles_new, vec!(bed_bundle_new));
+                bed_bundles_of_chrs.push(BedBundlesOfChr { chromosome, bed_bundles });
+                chromosome = chromosome_new;
+            }
+        }
+        bed_bundles_of_chrs.push(BedBundlesOfChr { chromosome, bed_bundles: bed_bundles_new });
+    }
+    Ok(bed_bundles_of_chrs)
 }
 
 pub(crate) fn list_beds(conf: &Conf) -> Result<(), Error> {
@@ -154,5 +181,9 @@ pub(crate) fn list_beds(conf: &Conf) -> Result<(), Error> {
 }
 
 pub(crate) fn survey_beds(conf: &Conf) -> Result<(), Error> {
-    todo!()
+    for bed_bundle_of_chr in get_bed_bundles_by_chrom(conf)? {
+        println!("For chromosome {}, we have {} BED bundles.", bed_bundle_of_chr.chromosome,
+                 bed_bundle_of_chr.bed_bundles.len())
+    }
+    Ok(())
 }
