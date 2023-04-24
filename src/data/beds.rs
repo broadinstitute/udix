@@ -5,7 +5,7 @@ use crate::data::chromosome::Chromosome;
 use crate::dx;
 use crate::error::Error;
 
-enum FileType {
+pub(crate) enum FileType {
     Bed,
     Bim,
     Fam,
@@ -18,9 +18,9 @@ pub(crate) struct BedBundle {
     i_block: usize,
 }
 
-struct BedBundlesOfChr {
-    chromosome: Chromosome,
-    bed_bundles: Vec<BedBundle>,
+pub(crate) struct BedBundlesOfChr {
+    pub(crate) chromosome: Chromosome,
+    pub(crate) bed_bundles: Vec<BedBundle>,
 }
 
 impl BedBundle {
@@ -48,6 +48,9 @@ impl BedBundle {
     }
     fn basename(&self) -> String {
         format!("{}_c{}_b{}", self.prefix, self.chromosome, self.i_block)
+    }
+    pub(crate) fn file_name(&self, file_type: &FileType) -> String {
+        format!("{}.{}", self.basename(), file_type)
     }
 }
 
@@ -151,7 +154,7 @@ fn get_bed_bundles(conf: &Conf) -> Result<Vec<BedBundle>, Error> {
     }
 }
 
-fn get_bed_bundles_by_chrom(conf: &Conf) -> Result<Vec<BedBundlesOfChr>, Error> {
+pub(crate) fn get_bed_bundles_by_chrom(conf: &Conf) -> Result<Vec<BedBundlesOfChr>, Error> {
     let mut bed_bundles_of_chrs: Vec<BedBundlesOfChr> = Vec::new();
     let mut bed_bundle_iter = get_bed_bundles(conf)?.into_iter();
     if let Some(bed_bundle) = bed_bundle_iter.next() {
