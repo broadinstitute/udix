@@ -106,7 +106,7 @@ fn run_job<A: App>(job: &A::Job, conf: &Conf) -> Result<(), Error> {
     dx::run(&["run", "--name", name.as_str(), "--input-json-file", inputs_file_arg,
         "--folder", folder_arg.as_str(), "--instance-type", A::INSTANCE_TYPE,
         A::APP_PATH])?;
-    println!("Launched job {} with input file {}.", name, inputs_file_arg);
+    println!("Launched job {} with inputs definition file {}.", name, inputs_file_arg);
     Ok(())
 }
 
