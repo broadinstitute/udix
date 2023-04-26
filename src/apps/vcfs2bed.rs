@@ -34,7 +34,7 @@ impl JobStaged for JobVcfs2Bed {
 impl App for AppVcfs2Bed {
     type Job = JobVcfs2Bed;
     type Inputs = Inputs;
-    const INSTANCE_TYPE: &'static str = "mem3_ssd3_x8";
+    const INSTANCE_TYPE: &'static str = "mem2_hdd2_v2_x4";
     const APP_PATH: &'static str = "/apps/vcfs2bed/vcfs2bed";
     const OUT_DIR_PATH: &'static str = "/apps/vcfs2bed/out/udix/";
 

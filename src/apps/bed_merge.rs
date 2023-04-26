@@ -39,7 +39,7 @@ fn in_file_link(conf: &Conf, bed_bundle: &BedBundle, file_type: &FileType)
 impl App for AppBedMerge {
     type Job = JobBedMerge;
     type Inputs = Inputs;
-    const INSTANCE_TYPE: &'static str = "mem2_hdd2_v2_x4";
+    const INSTANCE_TYPE: &'static str = "mem3_ssd3_x8";
     const APP_PATH: &'static str = "/apps/bedmerge/bedmerge";
     const OUT_DIR_PATH: &'static str = "/apps/bedmerge/out/udix/";
 
